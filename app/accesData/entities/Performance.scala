@@ -1,8 +1,8 @@
 package accesData.entities
 
-import java.sql.Date
+import java.time.LocalDate
 
-case class Performance(id: Long,date: Date,active: Boolean,showId: Long)
+case class Performance(id: Long,date: LocalDate,active: Boolean,showId: Long)
 
 
 

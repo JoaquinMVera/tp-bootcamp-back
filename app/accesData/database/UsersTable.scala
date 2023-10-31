@@ -12,7 +12,7 @@ class UsersTable(tag: Tag) extends Table[User](tag, "users") {
 
   def email = column[String]("email")
 
-  def balance  = column[Int]("balance")
+  def balance  = column[BigDecimal]("balance")
 
   override def * : ProvenShape[User] = (id, name, email,balance) <> (User.tupled, User.unapply)
 

@@ -1,5 +1,5 @@
 package accesData.entities
 
-import java.sql.Date
+import java.time.LocalDate
 
-case class Booking(id: Long,ticketAmount: Int,pucharseDate: Date,performanceId: Long, zoneId: Long, userId: Long)
+case class Booking(id: Long, ticketsAmount: Int, purchaseDate: LocalDate, performanceId: Long, zoneId: Long, userId: Long)

@@ -13,6 +13,7 @@ libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.3.3"
 libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.3"
 libraryDependencies += "org.postgresql" % "postgresql" % "42.3.2"
 
+
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.allariamas.controllers._"
 

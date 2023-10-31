@@ -8,3 +8,24 @@ GET     /                           controllers.HomeController.index()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+#Venue!
+POST    /venues                     controllers.VenueController.addVenue
+GET     /venues                     controllers.VenueController.getVenues
+#Añadir un get
+
+#Shows!
+POST    /shows                      controllers.ShowController.addShow
+GET     /shows                      controllers.ShowController.getShows
+GET     /shows/:id                  controllers.ShowController.getShow(id:Long)
+PUT     /shows/:id                  controllers.ShowController.changeEstatePerformance(id:Long)
+
+#Users!
+POST    /users                      controllers.UserController.addUser
+GET     /users                      controllers.UserController.getUsers
+GET     /users/:id                  controllers.UserController.getUser(id: Long)
+PUT     /users/:id                  controllers.UserController.depositMoney(id: Long)
+
+#Booking!
+POST    /bookings                   controllers.BookingController.buyTickets
+GET     /bookings                   controllers.BookingController.getTickets(user: Long)
