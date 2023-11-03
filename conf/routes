@@ -28,4 +28,4 @@ PUT     /users/:id                  controllers.UserController.depositMoney(id: 
 
 #Booking!
 POST    /bookings                   controllers.BookingController.buyTickets
-GET     /bookings                   controllers.BookingController.getTickets(user: Long)
+GET     /bookings                   controllers.BookingController.getBookings(user: Long)

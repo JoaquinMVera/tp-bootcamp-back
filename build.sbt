@@ -12,6 +12,8 @@ libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.0
 libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.3.3"
 libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.3"
 libraryDependencies += "org.postgresql" % "postgresql" % "42.3.2"
+libraryDependencies += "com.softwaremill.macwire" %% "macros" % "2.5.8" % "provided"
+libraryDependencies += "com.softwaremill.macwire" %% "util" % "2.5.8"
 
 
 // Adds additional packages into Twirl

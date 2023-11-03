@@ -1,44 +1,45 @@
 package controllers
 
-import accesData.entities.{Booking, Tickets}
-import controllers.validators.{BookingValidator, UserValidator}
-import play.api.libs.json.Json
+import controllers.requests.BookingRequest
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
-import controllers.writers.BookingWriter.writesPerformance
-
-import java.time.LocalDate
+import accesData.entities.BookingWriter.writesPerformance
+import services.BookingService
+import controllers.requests.BookingRequest.readsUser
+import syntax.errors.{NotFoundError, RequestError}
 import javax.inject.{Inject, Singleton}
 
 
 @Singleton
-class BookingController @Inject()(val cc: ControllerComponents) extends AbstractController(cc) {
+class BookingController @Inject()(val cc: ControllerComponents, bookingService: BookingService) extends AbstractController(cc) {
 
-  def buyTickets: Action[AnyContent] = Action {
+  def buyTickets: Action[JsValue] = Action(parse.json) {
     request =>
-      val jsonOption = request.body.asJson
+      val maybeBookingRequest = request.body.validate[BookingRequest]
 
-      val validation = BookingValidator.validate(jsonOption)
-
-      validation match {
-        case Left(error) => BadRequest(error.getMessage)
-        case Right(()) =>
-          val magiaDeServicio: Either[Throwable, Unit] = Right(())
-          magiaDeServicio match {
-            case Left(error) => Conflict(error.getMessage)
-            case Right(()) =>
-              Ok("The buy was succesfull")
+      maybeBookingRequest match {
+        case JsError(errors) => BadRequest("Invalid json format")
+        case JsSuccess(bookingRequest, path) =>
+          val maybeBooking = bookingService.buyTickets(bookingRequest)
+          maybeBooking match {
+            //Bad request para los casos feos que la capa de servicios (400) voy a tener que hacer un if aca
+            case Left(error: RequestError) => BadRequest(error.getMessage)
+            case Left(error) => InternalServerError(error.getMessage)
+            case Right(booking) =>
+              Ok(Json.toJson(booking))
           }
+
       }
   }
 
-  def getTickets(user: Long): Action[AnyContent] = Action{
-    request =>
-      val magiaDeServicio: Either[Throwable, Seq[Booking]] = Right(Seq(Booking(100,10,LocalDate.now,10,2,user)))
-      magiaDeServicio match {
-        case Left(error) => InternalServerError(error.getMessage)
-        case Right(list) =>
-          Ok(Json.toJson(list))
-      }
+  def getBookings(user: Long): Action[AnyContent] = Action {
+    val maybeBookingSeq = bookingService.getBookings(user)
+    maybeBookingSeq match {
+      case Left(error: NotFoundError) => NotFound(error.getMessage)
+      case Left(error) => InternalServerError(error.getMessage)
+      case Right(bookingsSeq) =>
+        Ok(Json.toJson(bookingsSeq))
+    }
   }
 
 

@@ -1,45 +1,52 @@
 package controllers
-import accesData.entities.{Show, Venue}
-import play.api.libs.json.Json
+import accesData.entities.{Venue}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 
 import javax.inject._
 import play.api.mvc._
 import requests.VenueRequest
-import validators.VenueValidator
-import writers.VenueWriter.writesVenue
+import accesData.entities.VenueWriter.writesVenue
+import requests.VenueRequest.readsVenue
+import services.VenueService
+import syntax.errors.RequestError
 
 
 
 @Singleton
-class VenueController @Inject()(val cc: ControllerComponents) extends AbstractController(cc) {
+class VenueController @Inject()(val cc: ControllerComponents,venueService: VenueService) extends AbstractController(cc) {
 
   //En el service falta atrapar negativo
 
-  def addVenue: Action[AnyContent] = Action {
+  //aca tengo que hacer inyeccion de dependencia
+  def addVenue: Action[JsValue] = Action(parse.json) {
     request =>
       //Me gustaria chequear que me pasen un json, primeramente
-      val jsonOption = request.body.asJson
 
-        val validation = VenueValidator.validate(jsonOption)
+      //esto es hacer la validacion de si esta bien el formato, sin tener que hacer un validator custom
+      val maybeVenueRequest = request.body.validate[VenueRequest]
 
-        validation match {
-          case Left(error) => BadRequest(error.getMessage)
-          case Right(()) =>
-            val magiaDeServicio: Either[Throwable, Unit] = Right(())
-            magiaDeServicio match {
-              case Left(error) => InternalServerError(error.getMessage)
-              case Right(()) => Ok("The venue was added succesfully")
-            }
-        }
+      maybeVenueRequest match {
+        case JsError(errors) => BadRequest("Invalid json format")
+        case JsSuccess(venueRequest, path) =>
+
+          val maybeVenue = venueService.addVenue(venueRequest)
+
+          maybeVenue match {
+            case Left(error:RequestError) => BadRequest(error.getMessage)
+            case Left(error) => InternalServerError(error.getMessage)
+            case Right(venue) => Ok(Json.toJson(venue)) // Ok(Venue.asJson)
+          }
+
+      }
+
   }
 
   def getVenues: Action[AnyContent] = Action {
-    request =>
-      val magiaDeServicio: Either[Throwable, Seq[Venue]] = Right(Seq(Venue(10,"Luna Park","capital",100)))
-      magiaDeServicio match {
+      val maybeVenueSeq: Either[Throwable, Seq[Venue]] = venueService.getAllVenues
+    maybeVenueSeq match {
         case Left(error) => InternalServerError(error.getMessage)
-        case Right(list) =>
-          Ok(Json.toJson(list))
+        case Right(venueSeq) =>
+          Ok(Json.toJson(venueSeq))
       }
   }
 

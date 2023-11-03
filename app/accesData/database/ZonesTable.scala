@@ -15,7 +15,7 @@ class ZonesTable(tag: Tag) extends Table[Zone](tag, "zones") {
 
   def price = column[BigDecimal]("price")
 
-  def showId = column[Long]("id_performance")
+  def showId = column[Long]("id_show")
 
 
   def showID = foreignKey("zones_fk_show", showId, TableQuery[PerformancesTable])(_.id)

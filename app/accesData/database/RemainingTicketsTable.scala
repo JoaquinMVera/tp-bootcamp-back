@@ -1,10 +1,10 @@
 package accesData.database
 
-import accesData.entities.{ Tickets}
+import accesData.entities.{ TicketsRemaining}
 import slick.lifted.{ProvenShape, Tag}
 import slick.jdbc.H2Profile.api._
 
-class RemainingTicketsTable(tag: Tag) extends Table[Tickets](tag, "remaining_tickets") {
+class RemainingTicketsTable(tag: Tag) extends Table[TicketsRemaining](tag, "remaining_tickets") {
 
   def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
@@ -18,6 +18,6 @@ class RemainingTicketsTable(tag: Tag) extends Table[Tickets](tag, "remaining_tic
 
   def zoneFK = foreignKey("remainigs_fk_zone", zoneId, TableQuery[ZonesTable])(_.id)
 
-  override def * : ProvenShape[Tickets] = (id,remaining,zoneId,performanceId) <> (Tickets.tupled, Tickets.unapply)
+  override def * : ProvenShape[TicketsRemaining] = (id,remaining,zoneId,performanceId) <> (TicketsRemaining.tupled, TicketsRemaining.unapply)
 
 }

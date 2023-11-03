@@ -1,74 +1,83 @@
 package controllers
 
-import accesData.entities.{Show, User}
-import controllers.validators.{DepositValidator, UserValidator}
-import play.api.libs.json.Json
+import accesData.entities.{User}
+import controllers.requests.{DepositRequest, UserRequest}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
-import controllers.writers.UserWriter.writesUser
-
+import accesData.entities.UserWriter.writesUser
+import requests.UserRequest.readsUser
+import services.UserService
+import syntax.errors.{NotFoundError, RequestError}
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class UserController @Inject()(val cc: ControllerComponents) extends AbstractController(cc) {
+class UserController @Inject()(val cc: ControllerComponents, userService: UserService) extends AbstractController(cc) {
 
-  def addUser: Action[AnyContent] = Action {
+
+  def addUser: Action[JsValue] = Action(parse.json) {
     request =>
-      val jsonOption = request.body.asJson
+      val maybeUserRequest = request.body.validate[UserRequest]
 
-      val validation = UserValidator.validate(jsonOption)
+      maybeUserRequest match {
+        case JsError(errors) => BadRequest("Invalid json format")
+        case JsSuccess(userRequest, path) =>
+          val maybeUser: Either[Throwable, User] = userService.addUser(userRequest)
+          maybeUser match {
+            //Esto de abajo es porque quiero dar un BadRequest cuando hagan algo invalido de logica (nombre empty, por ejemplo)
+            case Left(error: RequestError) => BadRequest(error.getMessage)
 
-      validation match {
-        case Left(error) => BadRequest(error.getMessage)
-        case Right(()) =>
-          val magiaDeServicio: Either[Throwable, Unit] = Right(())
-          magiaDeServicio match {
-            //falta otro caso de badRequest!
             case Left(error) => InternalServerError(error.getMessage)
-            case Right(()) =>
-              Ok("The user was added succesfully")
+            case Right(user) => Ok(Json.toJson(user)) // Ok(Venue.asJson)
           }
       }
   }
 
-  def getUsers : Action[AnyContent] = Action {
-    request =>
-      val magiaDeServicio: Either[Throwable, Seq[User]] = Right(Seq(User(10,"Joaquiño","joaco@gmail.com",100)))
-      magiaDeServicio match {
-        case Left(error) => InternalServerError(error.getMessage)
-        case Right(list) =>
-          Ok(Json.toJson(list))
-      }
+  def getUsers: Action[AnyContent] = Action {
+
+    val maybeUsers: Either[Throwable, Seq[User]] = userService.getAllUsers
+    maybeUsers match {
+      case Left(error) => InternalServerError(error.getMessage)
+      case Right(userList) =>
+        Ok(Json.toJson(userList))
+    }
   }
 
   def getUser(id: Long): Action[AnyContent] = Action {
-    request =>
-      val magiaDeServicio: Either[Throwable, User] = Right((User(id,"joaco","emailexample",1000)))
-      //Aca iria un bool? o incluso otro either, para ver si lo encontre o no. no creo que este bien un internal server error
-      //si no lo encuentro no?
-        magiaDeServicio match {
-        case Left(error) => InternalServerError(error.getMessage)
-        case Right(user) =>
-          Ok(Json.toJson(user))
-      }
+
+    val maybeUser: Either[Throwable, User] = userService.getUserById(id)
+    //Aca iria un bool? o incluso otro either, para ver si lo encontre o no. no creo que este bien un internal server error
+    //si no lo encuentro no?
+    maybeUser match {
+
+      //Esto de abajo es un error por si no encuentro el user! (si ese ID no existe)
+      case Left(error: NotFoundError) => NotFound(error.getMessage)
+      case Left(error) => InternalServerError(error.getMessage)
+      case Right(user) =>
+        Ok(Json.toJson(user))
+    }
   }
 
 
-  def depositMoney(id: Long): Action[AnyContent] = Action {
+  def depositMoney(id: Long): Action[JsValue] = Action(parse.json) {
     request =>
-        val jsonOption = request.body.asJson
+      val maybeDepositRequest = request.body.validate[DepositRequest]
 
-        val validation = DepositValidator.validate(jsonOption)
+      maybeDepositRequest match {
+        case JsError(errors) => BadRequest("Invalid json format")
+        case JsSuccess(depositRequest, path) =>
 
-        validation match {
-          case Left(error) => BadRequest(error.getMessage)
-          case Right(()) =>
-            val magiaDeServicio: Either[Throwable, Unit] = Right(())
-            magiaDeServicio match {
-              case Left(error) => Conflict(error.getMessage)
-              case Right(()) =>
-                Ok("The deposit was succesfull,new balance is TODO")
-            }
-        }
+          val maybeUser: Either[Throwable, User] = userService.addMoney(id, depositRequest.amount)
+
+          maybeUser match {
+            //Lo mismo que antes, si no encuentro el id, NotFound
+            case Left(error: NotFoundError) => NotFound(error.getMessage)
+            //Si me pasaron un amount negativo, no me gusta nada
+            case Left(error: RequestError) => BadRequest(error.getMessage)
+
+            case Left(error) => InternalServerError(error.getMessage)
+            case Right(user) => Ok(Json.toJson(user)) // Ok(Venue.asJson)
+          }
+      }
   }
 
 }
