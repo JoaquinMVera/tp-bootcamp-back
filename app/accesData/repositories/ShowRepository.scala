@@ -29,7 +29,7 @@ class ShowRepository {
   def findById(showId: Long) = {
     val findByIdQuery = showsTable.filter(_.id === showId).result.headOption.flatMap {
       case Some(user) => DBIO.successful(user)
-      case None => DBIO.failed(NotFoundError(s"Not found an user with $showId"))
+      case None => DBIO.failed(NotFoundError(s"Not found a show with $showId"))
     }
     findByIdQuery
   }

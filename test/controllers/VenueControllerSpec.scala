@@ -1,26 +1,32 @@
 package controllers
 
+import accesData.database.VenuesTable
 import accesData.entities.Venue
 import accesData.repositories.VenueRepository
-import com.google.inject.matcher.Matchers._
 import controllers.requests.VenueRequest
-import org.scalatest.flatspec.AnyFlatSpec
+import org.mockito._
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Play.materializer
 import play.api.libs.json.Json
-import play.api.test._
 import play.api.test.Helpers._
-import play.api.mvc._
+import play.api.test._
 import services.VenueService
+import slick.lifted.TableQuery
+import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.PostgresProfile.api._
 
 
-class VenueControllerSpec extends PlaySpec with Injecting with GuiceOneAppPerTest {
+class VenueControllerSpec extends PlaySpec  with GuiceOneAppPerTest with MockitoSugar {
 
   val mockRepository: VenueRepository = mock[VenueRepository]
   val venueService : VenueService = new VenueService(mockRepository)
   val venueController = new VenueController(stubControllerComponents(),venueService)
+  private val venuesTable = TableQuery[VenuesTable]
+
 
   "The venueController" should   {
 
@@ -36,14 +42,16 @@ class VenueControllerSpec extends PlaySpec with Injecting with GuiceOneAppPerTes
       )
 
       val jsonBodyResponse = Json.obj(
-        "id" -> 3,
+        "id" -> 6,
         "name" -> "VenueValida",
         "address" -> "Capital",
         "capacity" -> 100
       )
 
-      val venue = VenueRequest("VenueValida","Capital",100)
-      mockRepository.add(venue) returns Venue(1,"VenueValida","Capital",100)
+      val venueRequest = VenueRequest("VenueValida","Capital",100)
+      val venue = Venue(Int.MinValue,venueRequest.name,venueRequest.address,venueRequest.capacity)
+
+      when(mockRepository.add(venueRequest)) thenReturn ((venuesTable returning (venuesTable)) += venue)
 
       val validRequest = FakeRequest(POST, "/venues").withHeaders("Content-Type" -> "application/json").withJsonBody(jsonBody)
 

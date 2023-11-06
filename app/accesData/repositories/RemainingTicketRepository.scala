@@ -36,7 +36,7 @@ class RemainingTicketRepository {
   }
 
   def updateRemaining(ticketId: Long, amount: Int) = {
-    val updateBalanceQuery = remaingTicketsTable.filter(_.id === ticketId).forUpdate.map(_.remaining).update(amount)
+    val updateBalanceQuery = remaingTicketsTable.filter(_.id === ticketId).map(_.remaining).update(amount)
     updateBalanceQuery
   }
 

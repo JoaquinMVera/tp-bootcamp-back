@@ -35,7 +35,7 @@ class UserRepository {
   }
 
   def updateBalance(userId:Long, amount: BigDecimal) = {
-    val updateBalanceQuery = usersTable.filter(_.id === userId).forUpdate.map(_.balance).update(amount)
+    val updateBalanceQuery = usersTable.filter(_.id === userId).map(_.balance).update(amount)
     updateBalanceQuery
   }
 
