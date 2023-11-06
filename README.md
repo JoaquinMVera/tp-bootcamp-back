@@ -108,6 +108,18 @@ Devolveremos un JSON con todos los usuarios de la db
 ```
 
 ``` scala
+PUT /users/id (Deposita dinero en la cuenta del usuario
+
+Se espera recibir un JSON con el siguiente formato:
+{
+	"amount":BigDecimal
+}
+
+Devolveremos un JSON con el usuario con el monto actualizado
+
+```
+
+``` scala
 GET /users/[user_id]
 
 Devolveremos un JSON con el usuario indicado de la db
