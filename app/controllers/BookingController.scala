@@ -7,6 +7,7 @@ import accesData.entities.BookingWriter.writesPerformance
 import services.BookingService
 import controllers.requests.BookingRequest.readsUser
 import syntax.errors.{NotFoundError, RequestError}
+
 import javax.inject.{Inject, Singleton}
 
 

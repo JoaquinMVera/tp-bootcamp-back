@@ -4,16 +4,16 @@ import accesData.entities.{Performance, Show, Venue, Zone}
 import accesData.repositories.{PerformanceRepository, RemainingTicketRepository, ShowRepository, VenueRepository, ZoneRepository}
 import controllers.requests.{PerformanceStateRequest, ShowRequest, ZoneRequest}
 import syntax.errors.RequestError
-import slick.dbio.{DBIO}
+import slick.dbio.DBIO
 
 import java.time.LocalDate
 import scala.concurrent._
 import scala.concurrent.duration.DurationInt
-import scala.util.{ Try}
+import scala.util.Try
 import scala.concurrent.ExecutionContext.Implicits.global
 import slick.jdbc.PostgresProfile.api._
 import accesData.DatabaseConfigModule
-import views.ShowViewer
+import views.{ShowAllViewer, ShowViewer}
 
 import javax.inject.Inject
 
@@ -65,8 +65,13 @@ class ShowService @Inject()(showRepository: ShowRepository, zoneRepository: Zone
 
   }
 
-  def getAllShows: Either[Throwable, Seq[Show]] = {
-    Try(Await.result(db.run(showRepository.findAll), 10.seconds)).toEither
+  def getAllShows = {
+    val dbioShowAll = for {
+      shows <- showRepository.findAll
+    } yield shows
+
+  Try(Await.result(db.run(dbioShowAll),10.seconds)).toEither
+
   }
 
   def getShowViewerById(showId: Long) = {
@@ -75,11 +80,17 @@ class ShowService @Inject()(showRepository: ShowRepository, zoneRepository: Zone
         show <- showRepository.findById(showId)
         performances <- performanceRepository.findByShowId(showId)
         zones <- zoneRepository.findByShowId(showId)
-      } yield ShowViewer(show, performances, zones)
+        remainings <- DBIO.sequence(for {
+          performance <- performances
+          zone <- zones
+        } yield remainingTicketRepository.findByPerformanceAndZone(zone.id,performance.id))
+
+      } yield ShowViewer(show, performances, zones,remainings,remainings.forall(_.remaining == 0))
 
     Try(Await.result(db.run(dbioShowViewer), 10.seconds)).toEither
 
   }
+
 
   def changePerformanceState(showId: Long, performanceStateRequest: PerformanceStateRequest): Either[Throwable, Performance] = {
     val dbioPerformance =

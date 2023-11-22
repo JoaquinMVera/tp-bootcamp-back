@@ -4,11 +4,11 @@ package controllers
 import controllers.requests.{PerformanceStateRequest, ShowRequest}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc._
-import services.{ShowService}
+import services.ShowService
 import syntax.errors.{NotFoundError, RequestError}
-import accesData.entities.ShowWriter._
 import accesData.entities.PerformanceWriter.writesPerformance
 import views.ShowViewer.writesShowViewer
+import accesData.entities.ShowWriter.writesShow
 import javax.inject.{Inject, Singleton}
 
 
@@ -40,6 +40,7 @@ class ShowController @Inject()(val cc: ControllerComponents,showService: ShowSer
     maybeShowsSeq match {
         case Left(error) => InternalServerError(error.getMessage)
         case Right(showsSeq) =>
+
           Ok(Json.toJson(showsSeq))
       }
   }
